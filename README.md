@@ -22,11 +22,12 @@ Each agent gets a **fresh context** and a **narrow remit**. The worker implement
 
 ## Personas
 
-Six reusable agent personas, each with a full prompt template in [`references/personas.md`](references/personas.md):
+Seven reusable agent personas, each with a full prompt template in [`references/personas.md`](references/personas.md):
 
 | Persona | Role | When to dispatch |
 |---|---|---|
-| **Domain Audit Worker** | Map territory before changes (read-only) | Phase 1, before any non-trivial change |
+| **Domain Audit Worker** | Map territory *inside the codebase* before changes (read-only) | Phase 1, before any non-trivial change |
+| **Research Worker** | Investigate *outside the codebase* — library docs, specs, prior art (read-only) | Phase 1 (parallel to audit) or whenever a decision needs facts the codebase doesn't contain |
 | **Implementer Worker** | Build one feature → one commit | Phase 2, for any change of 5+ lines or 2+ files |
 | **Functional Verifier** | *Does it work?* — builds, tests, scope, correctness, security | Phase 3 — always, parallel |
 | **Architecture Verifier** | *Is it well-built?* — DRY, simplicity, N+1, deepening, dead code | Phase 3 — always, parallel |
@@ -34,6 +35,8 @@ Six reusable agent personas, each with a full prompt template in [`references/pe
 | **Design Verifier** | *Is it 1-tier quality?* — typography / color / spacing critique against reference tiers | Phase 3 — parallel when UI touched |
 
 The non-negotiable pair on every commit is **Functional + Architecture**. They answer two distinct questions one verifier can't reliably do both of at adversarial depth.
+
+**Audit vs Research** is the other axis: Audit reads *your* code; Research reads *the world*. Different tools (`grep`/`Read`/`SQL` vs `WebFetch`/`WebSearch`/Context7 MCP). Different outputs (file:line + invariants vs facts + URLs). Both read-only, both safe to run in parallel.
 
 ## Structured handoff
 

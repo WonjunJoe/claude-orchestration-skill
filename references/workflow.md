@@ -27,9 +27,9 @@ Don't skip when:
 - The user used a vague directive ("clean up this page") — the audit IS the spec.
 - You suspect existing bugs or inconsistencies the change might trip over.
 
-### Dispatching audits in parallel
+### Dispatching audit + research in parallel
 
-Read-only audits don't conflict. Send them all at once:
+Read-only dispatches don't conflict. Send them all at once. **Audit Worker reads YOUR codebase; Research Worker reads the OUTSIDE world.** Both safe in one batch:
 
 ```
 Dispatch 1: Domain Audit Worker — "map all places settlement amounts are computed/displayed, including BE response schemas and FE display paths"
@@ -37,9 +37,11 @@ Dispatch 1: Domain Audit Worker — "map all places settlement amounts are compu
 Dispatch 2: Codebase Audit Worker — "find refactor opportunities in the artist portal that have surfaced in the last 5 commits; output prioritized list"
 
 Dispatch 3: Design Audit Worker — "1-tier designer review of /my/calendar and /my/deals against Stripe/Linear references"
+
+Dispatch 4: Research Worker — "react-aria v3.x — does MenuTrigger handle Escape-to-close natively, or do we need a handler? Cite the docs + version."
 ```
 
-These return in parallel. The orchestrator integrates their findings before dispatching any implementer.
+These return in parallel. The orchestrator integrates their findings before dispatching any implementer. Dispatches 1-3 all use the **Domain Audit Worker persona** with different task assignments (the "three audit types" — same persona prompt, task differs). Dispatch 4 uses the **Research Worker persona** (different tools, different sources, different output format).
 
 ### What an audit produces
 

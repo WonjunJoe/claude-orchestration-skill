@@ -34,17 +34,23 @@ Phase 4 — Loop
    ↓ PASS → ship + report
 ```
 
-### Phase 1 — Audit
+### Phase 1 — Audit + Research
 
-Before any code changes, **dispatch read-only audit workers in parallel** to map the territory. Audits don't conflict with each other (read-only) so they go in one batch.
+Before any code changes, **dispatch read-only workers in parallel** to map the territory. Two distinct directions, both read-only, both safe to run in one batch:
 
-Three common audit types:
+**Audit Worker — reads YOUR codebase.** Three common audit assignments (same persona, different task):
 
 - **Domain Audit** — map current code + DB + business rules against the proposed change. Returns: where the change touches, what invariants matter, what edge cases lurk.
 - **Codebase Audit** — find structural opportunities (deepening, DRY, dead code). Returns: prioritized refactor candidates with deletion-test reasoning.
 - **Design Audit** — 1-tier designer eyes on the current screens. Returns: typography / spacing / color / hierarchy issues with reference patterns.
 
-Skip audit when the task is small and the territory is well-known. Don't skip it when you don't already know the answer to "where in the codebase does this live and what does it touch?"
+**Research Worker — reads the OUTSIDE WORLD.** Dispatch when a decision needs facts the codebase doesn't contain:
+
+- Library behavior / version differences (does `react-aria` MenuTrigger handle keyboard escape?).
+- Spec / RFC questions (what does the W3C ARIA spec say about menu focus management?).
+- Prior art / best practice surveys (what auth approach do similar Postgres + Next.js apps use in 2026?).
+
+Audit and Research can run **in parallel** — different sources, different tools, no conflict. Skip either when the task is small and the territory is well-known. Don't skip Audit when you don't already know "where does this live and what does it touch?" Don't skip Research when the implementer would otherwise guess at library behavior from training memory (which may be stale).
 
 ### Phase 2 — Implement
 
@@ -97,7 +103,8 @@ This skill carries five reusable agent personas. Load the full persona prompt fr
 
 | Persona | Role | Default model | Mandatory tool | Tools | When to dispatch |
 |---|---|---|---|---|---|
-| **Domain Audit Worker** | Map territory before changes | Sonnet | — | Read, Grep, SQL via MCP if available | Phase 1, before any non-trivial change |
+| **Domain Audit Worker** | Map territory inside the codebase before changes | Sonnet | — | Read, Grep, SQL via MCP if available | Phase 1, before any non-trivial change |
+| **Research Worker** | Investigate external knowledge — library docs, specs, prior art | Sonnet | — | WebFetch, WebSearch, Context7 MCP | Phase 1 (parallel to audit), or whenever a decision needs facts the codebase doesn't contain |
 | **Implementer Worker** | Build one feature → one commit | Sonnet (Opus when creative judgment dominates — visual design, copy with strong voice) | — | Read, Edit, Write, Bash | Phase 2, for any code change of 5+ lines or 2+ files |
 | **Functional Verifier** | *Does it work?* — builds, tests, scope, correctness, security | Sonnet | `xcodebuild test -only-testing:<UITestTarget>` (iOS) | Read, Bash | Phase 3 — **always, default parallel** |
 | **Architecture Verifier** | *Is it well-built?* — DRY, simplicity, perf (N+1), deepening, dead code | Sonnet | — | Read, Grep, Bash | Phase 3 — **always, default parallel** |
