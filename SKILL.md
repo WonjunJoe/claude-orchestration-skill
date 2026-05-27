@@ -105,7 +105,9 @@ This skill carries five reusable agent personas. Load the full persona prompt fr
 |---|---|---|---|---|---|
 | **Domain Audit Worker** | Map territory inside the codebase before changes | Sonnet | — | Read, Grep, SQL via MCP if available | Phase 1, before any non-trivial change |
 | **Research Worker** | Investigate external knowledge — library docs, specs, prior art | Sonnet | — | WebFetch, WebSearch, Context7 MCP | Phase 1 (parallel to audit), or whenever a decision needs facts the codebase doesn't contain |
-| **Implementer Worker** | Build one feature → one commit | Sonnet (Opus when creative judgment dominates — visual design, copy with strong voice) | — | Read, Edit, Write, Bash | Phase 2, for any code change of 5+ lines or 2+ files |
+| **Feature Implementer** | Build NEW behavior → one commit | Sonnet (Opus when creative judgment dominates — visual design, copy with strong voice) | — | Read, Edit, Write, Bash | Phase 2, when the assignment adds new behavior |
+| **Refactor Implementer** | Restructure WITHOUT changing behavior (DRY / consolidation / deepening) | Sonnet | Full existing test suite still green | Read, Edit, Write, Bash | Phase 2, when the assignment is structural-only |
+| **Fix Implementer** | Fix a broken behavior using TDD (failing test first, then green) | Sonnet | Reproducer test that fails before, passes after, fails again when fix inverted | Read, Edit, Write, Bash | Phase 2, when the assignment is a bug / regression / wrong calculation |
 | **Functional Verifier** | *Does it work?* — builds, tests, scope, correctness, security | Sonnet | `xcodebuild test -only-testing:<UITestTarget>` (iOS) | Read, Bash | Phase 3 — **always, default parallel** |
 | **Architecture Verifier** | *Is it well-built?* — DRY, simplicity, perf (N+1), deepening, dead code | Sonnet | — | Read, Grep, Bash | Phase 3 — **always, default parallel** |
 | **Black-User E2E Validator** | *Does a clueless user succeed?* — drives running app as fresh user | Sonnet | Playwright (web) / XCUITest (iOS) | playwright MCP, Bash | Phase 3 — **default parallel** (skip only if change is trivial + no UI/flow impact) |
@@ -119,15 +121,19 @@ The `description` field on every `Agent` dispatch **must start with a role tag i
 
 | Tag | Use for | Examples of personas |
 |---|---|---|
-| `[worker]` | Mutates code / writes files / commits | Implementer Worker |
+| `[worker:feature]` | Adds NEW behavior the system didn't have | Feature Implementer |
+| `[worker:refactor]` | Restructures WITHOUT changing behavior | Refactor Implementer |
+| `[worker:fix]` | Fixes a broken behavior (TDD) | Fix Implementer |
 | `[validator]` | Adversarial verification of existing work (read-only, judges PASS/FAIL) | Functional Verifier, Architecture Verifier, Black-User E2E Validator, Design Verifier |
-| `[read]` | Read-only mapping of the existing codebase / DB / docs | Domain Audit, Codebase Audit, Design Audit |
-| `[research]` | Read-only investigation of *external* knowledge (library docs, web, library source) | Context7 lookup, library API research, prior-art search |
+| `[read]` | Read-only mapping of the existing codebase / DB / docs | Domain / Codebase / Design Audit (all use the Audit Worker persona) |
+| `[research]` | Read-only investigation of *external* knowledge (library docs, web, library source) | Research Worker |
 
 Format:
 
 ```
-description: "[worker] D2 extras 재설계 — table → card grid"
+description: "[worker:feature] D2 extras 재설계 — table → card grid"
+description: "[worker:refactor] settle engine — extract currency formatter"
+description: "[worker:fix] calendar empty-month nav — wrong month resolves"
 description: "[validator] functional — D2 extras commit a3f2"
 description: "[validator] architecture — D2 extras commit a3f2"
 description: "[validator] e2e — D2 extras commit a3f2 (black user, add deal flow)"
@@ -136,7 +142,11 @@ description: "[read] audit settlement amount touch-points"
 description: "[research] react-aria menu keyboard nav conventions"
 ```
 
-For `[validator]`, name the verifier type as the second word — `functional` / `architecture` / `e2e` / `design`. Three or four `[validator] ...` lines tend to be running in parallel after each implementer commit; the second word is what lets the user tell them apart in the agent switcher.
+Two subtype rules:
+- **`[worker:<intent>]`** — the intent subtype (`feature` / `refactor` / `fix`) goes inside the bracket because it changes which persona prompt is dispatched. Three implementer personas, three subtypes.
+- **`[validator] <verifier-type>`** — the verifier type goes as the second word (not inside the bracket) because they share the same procedural shell (independent context, adversarial, 5-field handoff) with different focus. Four verifier types appear after the same `[validator]` tag.
+
+The point of the convention either way: the agent switcher shows the role and the focus at a glance, so the user can read "what's running" without opening each agent.
 
 Rules:
 - The tag is the **first thing** in the description, before any task summary.

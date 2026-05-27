@@ -56,14 +56,28 @@ If an audit returns "everything looks fine and here are some ideas," dispatch wa
 
 ## Phase 2 — Implement
 
+### Pick the right Implementer persona first
+
+Three implementer personas, by **intent** (not by stack):
+
+| Intent | Persona | Use when |
+|---|---|---|
+| Add NEW behavior | **Feature Implementer** | Assignment introduces something the system didn't have — new endpoint, new screen, new business rule, new external integration |
+| Restructure WITHOUT changing behavior | **Refactor Implementer** | DRY extraction, consolidation, deepening, dead code removal, file reorganization, renames. All existing tests stay green with existing assertions |
+| Fix a broken behavior | **Fix Implementer** | Bug report, failing test, regression, wrong calculation, security hole. TDD: failing reproducer test first, then green |
+
+The persona choice changes the procedure, the catalog sections to apply, and **which verifier is the main critic**. Mis-picking is itself a bug — e.g. dispatching a Feature Implementer for a refactor task → they'll subtly change behavior because their persona doesn't enforce parity.
+
+Self-check: if you can write the assignment as "before this commit X was Y; after this commit X is Z" where Y ≠ Z, it's Feature or Fix (which Z?). If "before and after are observable-equivalent," it's Refactor.
+
 ### Serial by default
 
 The next worker should inherit the previous worker's commit via git. They start their context fresh, but they start with the codebase at HEAD.
 
 ```
-Audit returns → Orchestrator picks first commit slice → Dispatch Implementer 1
-  → Implementer 1 commits SHA X → Orchestrator dispatches Validator on SHA X
-  → Validator passes → Orchestrator dispatches Implementer 2 on commit slice 2
+Audit returns → Orchestrator picks first commit slice → Dispatch Implementer 1 (Feature/Refactor/Fix)
+  → Implementer 1 commits SHA X → Orchestrator dispatches Validators on SHA X
+  → Validators pass → Orchestrator dispatches Implementer 2 on commit slice 2
   → ... and so on
 ```
 
