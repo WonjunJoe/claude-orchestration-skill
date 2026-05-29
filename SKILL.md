@@ -83,7 +83,7 @@ So the default parallel batch is **3 verifiers** (Functional + Architecture + Bl
 
 **iOS / mobile stack: Functional Verifier 는 XCUITest 실행 의무.** Code trace 만으론 false positive 잦음 (예: `testBackPreservesSession` 가 PASS 단 실제 사용자는 lost — assertion 약함). XCUITest 가 진짜 end-user gesture verify. `xcodebuild test -only-testing:<UITestTarget>` 통과가 PASS 의 1st signal.
 
-**Default model: Sonnet** for all verifiers. Fresh context + adversarial prompt is what makes them catch issues — not raw model power. Reserve Opus for implementers whose creative judgment is the bottleneck (e.g. visual design where Sonnet defaults have been rejected before).
+**Model: inherit by default, escalate by risk — see [Model policy](#model-policy).** Fresh context + an adversarial prompt is what catches *most* issues, so a cost-efficient verifier with clean eyes is the right default. But raw capability is what catches the *subtle* miss — a hidden cross-file N+1, a total that's off by VAT, a boundary that leaks on one code path only — so escalate verifiers to the frontier tier when the commit carries money math, a security boundary, or a named 1-tier quality bar.
 
 **Main session does zero direct verification.** Don't read one screenshot and call it a critique; don't run a quick grep and call it scrutiny. Dispatch a fresh verifier instead. The whole point of the loop is that the orchestrator does not become a fifth opinion on its own work — it would carry the same blind spots.
 
@@ -99,21 +99,43 @@ Verifier returns one of three verdicts:
 
 ## Personas
 
-This skill carries five reusable agent personas. Load the full persona prompt from `references/personas.md` when dispatching — that file is the source of truth for the system prompts.
+This skill carries nine reusable agent personas. Load the full persona prompt from `references/personas.md` when dispatching — that file is the source of truth for the system prompts.
 
-| Persona | Role | Default model | Mandatory tool | Tools | When to dispatch |
-|---|---|---|---|---|---|
-| **Domain Audit Worker** | Map territory inside the codebase before changes | Sonnet | — | Read, Grep, SQL via MCP if available | Phase 1, before any non-trivial change |
-| **Research Worker** | Investigate external knowledge — library docs, specs, prior art | Sonnet | — | WebFetch, WebSearch, Context7 MCP | Phase 1 (parallel to audit), or whenever a decision needs facts the codebase doesn't contain |
-| **Feature Implementer** | Build NEW behavior → one commit | Sonnet (Opus when creative judgment dominates — visual design, copy with strong voice) | — | Read, Edit, Write, Bash | Phase 2, when the assignment adds new behavior |
-| **Refactor Implementer** | Restructure WITHOUT changing behavior (DRY / consolidation / deepening) | Sonnet | Full existing test suite still green | Read, Edit, Write, Bash | Phase 2, when the assignment is structural-only |
-| **Fix Implementer** | Fix a broken behavior using TDD (failing test first, then green) | Sonnet | Reproducer test that fails before, passes after, fails again when fix inverted | Read, Edit, Write, Bash | Phase 2, when the assignment is a bug / regression / wrong calculation |
-| **Functional Verifier** | *Does it work?* — builds, tests, scope, correctness, security | Sonnet | `xcodebuild test -only-testing:<UITestTarget>` (iOS) | Read, Bash | Phase 3 — **always, default parallel** |
-| **Architecture Verifier** | *Is it well-built?* — DRY, simplicity, perf (N+1), deepening, dead code | Sonnet | — | Read, Grep, Bash | Phase 3 — **always, default parallel** |
-| **Black-User E2E Validator** | *Does a clueless user succeed?* — drives running app as fresh user | Sonnet | Playwright (web) / XCUITest (iOS) | playwright MCP, Bash | Phase 3 — **default parallel** (skip only if change is trivial + no UI/flow impact) |
-| **Design Verifier** | *Is it 1-tier quality?* — typography / color / spacing critique | Sonnet | — | playwright MCP, Read | Phase 3 — **default parallel when UI touched** |
+| Persona | Role | Mandatory tool | Tools | When to dispatch |
+|---|---|---|---|---|
+| **Domain Audit Worker** | Map territory inside the codebase before changes | — | Read, Grep, SQL via MCP if available (prefer a read-only agent type like `Explore` when your harness offers one) | Phase 1, before any non-trivial change |
+| **Research Worker** | Investigate external knowledge — library docs, specs, prior art | — | WebFetch, WebSearch, Context7 MCP | Phase 1 (parallel to audit), or whenever a decision needs facts the codebase doesn't contain |
+| **Feature Implementer** | Build NEW behavior → one commit | — | Read, Edit, Write, Bash | Phase 2, when the assignment adds new behavior |
+| **Refactor Implementer** | Restructure WITHOUT changing behavior (DRY / consolidation / deepening) | Full existing test suite still green | Read, Edit, Write, Bash | Phase 2, when the assignment is structural-only |
+| **Fix Implementer** | Fix a broken behavior using TDD (failing test first, then green) | Reproducer test that fails before, passes after, fails again when fix inverted | Read, Edit, Write, Bash | Phase 2, when the assignment is a bug / regression / wrong calculation |
+| **Functional Verifier** | *Does it work?* — builds, tests, scope, correctness, security | `xcodebuild test -only-testing:<UITestTarget>` (iOS) | Read, Bash | Phase 3 — **always, default parallel** |
+| **Architecture Verifier** | *Is it well-built?* — DRY, simplicity, perf (N+1), deepening, dead code | — | Read, Grep, Bash | Phase 3 — **always, default parallel** |
+| **Black-User E2E Validator** | *Does a clueless user succeed?* — drives running app as fresh user | Playwright (web) / XCUITest (iOS) | playwright MCP, Bash | Phase 3 — **default parallel** (skip only if change is trivial + no UI/flow impact) |
+| **Design Verifier** | *Is it 1-tier quality?* — typography / color / spacing critique | — | playwright MCP, Read | Phase 3 — **default parallel when UI touched** |
+
+Model choice is deliberately **not** a column here — pin it by tier and risk, not by version name. See [Model policy](#model-policy) below.
 
 See `references/personas.md` for full prompt templates. See `references/workflow.md` for detailed phase-by-phase mechanics and decision trees.
+
+## Model policy
+
+The old rule was "Sonnet for everything, Opus only for creative implementers." It was written when the orchestrator itself ran on a mid-tier model and token cost dominated every call. Two things have since changed, and the policy moves with them:
+
+1. Sessions now routinely run on a **frontier model** (the strongest available — Opus 4.8 and up). An orchestrator that capable shouldn't reflexively hand every worker a weaker brain.
+2. The dispatch tools now **default a sub-agent to inherit the orchestrator's model** unless you override. Inheriting is almost always correct — so *not* pinning a model is the new default, and a pin is the deliberate exception.
+
+The principles:
+
+- **Don't pin a model name. Inherit by default.** A dispatched agent inherits the session model unless told otherwise, and that's usually right. Hard-coding `"Sonnet"` freezes the skill to whatever that alias meant the day it was written — it silently ages every time the model line moves (4.6 → 4.8 → …). Express intent as a **tier + reason**, never a version.
+- **Two tiers, chosen by what a miss costs:**
+  - **Efficient tier** — the fast / cheap family (Sonnet- or Haiku-class). Right when volume and speed matter more than the last 5% of judgment.
+  - **Frontier tier** — the strongest available (Opus-class). Right when a miss is expensive *and* subtle.
+- **Default routing by role:**
+  - **Audit / Research (read-only):** efficient tier, or just inherit. They gather and map; they rarely need frontier judgment. *Dispatch tip:* when your harness offers a read-only agent type (e.g. `Explore`), use it — it **guarantees** no writes and is tuned for fan-out search, so read-only safety doesn't rest on the prompt alone.
+  - **Implementers:** inherit the session model. Drop to the efficient tier for mechanical work (a rename, a mechanical extraction); stay frontier when creative judgment or tricky correctness dominates — visual design, settlement math, security-sensitive paths.
+  - **Verifiers:** the heart of the old rule still holds — *fresh context + an adversarial prompt is what catches issues, not raw power.* For routine commits an efficient-tier verifier with clean eyes beats a frontier-tier one carrying the implementer's blind spots. **But** raw capability is exactly what catches the *subtle* miss: a hidden cross-file N+1, a total off by VAT, a boundary that leaks on one path only. So **escalate verifiers to the frontier tier when the commit carries money math, a security boundary, or a named 1-tier quality bar.** On a high-stakes commit, when in doubt, spend the frontier tokens — one missed leak or wrong payout costs far more than one frontier verifier run.
+
+**At a glance:** read-only and routine roles → efficient tier (or inherit); implementers → inherit; verifiers → efficient by default, frontier when money / security / 1-tier quality is on the line. Whenever you override, write the reason into the dispatch (`model: frontier — settlement accuracy`) so the next reader sees *why*, not just *what*.
 
 ## Dispatch description convention (every Agent call)
 

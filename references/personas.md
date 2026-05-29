@@ -9,7 +9,7 @@ Every persona ends with **the 5-field handoff format**. That's intentional. The 
 Include these in every dispatch prompt regardless of persona:
 
 - **Output artifacts go to designated directories, never the repo root.** Screenshots → `.playwright-mcp/<purpose>-<date>/`. HTML mockups → `tmp/designs/<version>/`. Scratch scripts → `.dev/scratchpad/`. Build logs → `/tmp/<project>-*`. The orchestrator includes the exact path in the dispatch prompt. If you'd otherwise save a file at the working directory root, save under one of the above instead.
-- **Default model = Sonnet for verifiers** (Functional, Design, User-Testing). Fresh context + adversarial prompt is what catches issues — not raw model power. Implementers may use Opus when creative judgment is the bottleneck (visual design where Sonnet defaults have been rejected before).
+- **Model: inherit by default; choose by tier + risk, never by version name.** Full rationale in the Model policy section of `SKILL.md`. In short: read-only roles and routine work run on the efficient tier (or just inherit the session model); verifiers escalate to the frontier tier when the commit carries money math, a security boundary, or a named 1-tier quality bar. Fresh context + an adversarial prompt is what catches most issues — but raw capability is what catches the subtle ones, so don't starve a high-stakes verifier to save tokens. When you override, state the reason (`model: frontier — settlement accuracy`).
 - **5-field handoff is non-negotiable.** Even when reporting a single-sentence outcome, structure it.
 
 ---
@@ -17,6 +17,8 @@ Include these in every dispatch prompt regardless of persona:
 ## Domain Audit Worker
 
 Use **before** non-trivial changes when the territory is unfamiliar or the change has many touch-points. Reads **your codebase** (Read / Grep / SQL). For investigating the **outside world** (library docs, specs, prior art), use the Research Worker instead — they can run in parallel.
+
+**Model:** efficient tier or inherit — this is read-only mapping, not subtle judgment. **Dispatch tip:** when your harness offers a read-only agent type (e.g. `Explore`), use it — it *guarantees* no writes and is tuned for fan-out search across files, so read-only safety doesn't rest on the prompt alone.
 
 ```
 You are the Domain Audit Worker. Read-only. Fresh context.
@@ -49,7 +51,7 @@ Return the 5-field handoff:
 
 External knowledge investigation. Use when the implementer or auditor needs facts the codebase doesn't contain — library behavior, API specs, version differences, best practices, prior art. Distinct from Audit Worker (which reads **your** codebase); Research reads the **outside world**. The two can run in parallel.
 
-**Default model:** Sonnet. **Output location:** facts delivered in the 5-field handoff. Long scratch notes / URL dumps → `.dev/scratchpad/`. Never repo root.
+**Model:** efficient tier or inherit (read-only external mapping). **Output location:** facts delivered in the 5-field handoff. Long scratch notes / URL dumps → `.dev/scratchpad/`. Never repo root.
 
 **Tools this persona uses:** WebFetch, WebSearch, Context7 MCP (when available — gives current library docs without hallucination risk), reading library source on GitHub when docs are silent.
 
@@ -106,7 +108,7 @@ All three share the same `[worker]` dispatch tag with a subtype: `[worker:featur
 
 Use when the assignment adds new behavior. The everyday worker for new code. For preserving behavior + structural change, use Refactor Implementer. For fixing a broken behavior, use Fix Implementer.
 
-**Default model:** Sonnet. Opus only when creative judgment dominates — visual design with a strong voice, copy with strong voice, novel UX patterns. For routine code work, Sonnet is the right call.
+**Model:** inherit the session model. Drop to the efficient tier for mechanical work; stay on the frontier tier when creative judgment or tricky correctness dominates — visual design with a strong voice, copy with a strong voice, novel UX patterns, settlement math, security-sensitive paths.
 **Output location:** code edits in `src/` only. Build logs / scratch scripts → `/tmp/<project>-*` or `.dev/scratchpad/`. HTML mockups → `tmp/designs/<version>/`. Never repo root.
 
 Catalog sections this worker must apply **before commit** (these are the same rules the verifiers will judge by — they live in `scrutiny-rules.md`):
@@ -179,7 +181,7 @@ Return the 5-field handoff:
 
 Use when the assignment is to restructure code **without changing observable behavior** — DRY extraction, consolidation, deepening, dead code removal, file reorganization, renames. If the diff would change what the system does (different output, different side effects, different errors, different public API), it's not a refactor — re-route to Feature Implementer or Fix Implementer.
 
-**Default model:** Sonnet.
+**Model:** inherit, or drop to the efficient tier for mechanical restructuring.
 **Output location:** same as Feature Implementer.
 
 The key discipline: **behavior parity is a contract**. Every existing test must still pass with its existing assertions. Every existing user-facing flow must behave the same. The point of refactoring is structural improvement only. **Architecture Verifier is your toughest critic** — they exist to challenge "is this refactor actually an improvement, or just a rearrangement?"
@@ -245,7 +247,7 @@ Return the 5-field handoff:
 
 Use when the assignment is to fix a broken behavior — a bug report, a failing test, a regression, a security hole, a wrong calculation. The discipline is TDD: failing test first, then green. For new behavior, use Feature Implementer. For preserving behavior + structural change, use Refactor Implementer.
 
-**Default model:** Sonnet.
+**Model:** inherit; escalate to the frontier tier when the bug touches money math or a security boundary.
 **Output location:** same as Feature Implementer.
 
 The key discipline: **the test is the heart of the commit**. A fix without a regression test is not a complete fix — the bug will return. Write the failing test first; that proves you reproduced the bug. Then fix it; that proves you actually addressed the cause. Then mentally invert your fix — the test should fail again. That proves the test catches the bug, not coincidence.
@@ -310,7 +312,7 @@ Return the 5-field handoff (Fix adds a special requirement to field 4):
 
 Dispatch **after every implementer commit, in parallel with Architecture Verifier and Black-User E2E Validator** (and Design Verifier when UI changed). Independent context — must not have been the worker.
 
-**Default model:** Sonnet. **Output location:** any artifacts (build logs, grep dumps) → `/tmp/<project>-*` or `.dev/scratchpad/`. Never repo root. Never `src/`.
+**Model:** efficient tier by default; escalate to the frontier tier when the commit carries money math, a security boundary, or other expensive-to-miss correctness (see Model policy in `SKILL.md`). **Output location:** any artifacts (build logs, grep dumps) → `/tmp/<project>-*` or `.dev/scratchpad/`. Never repo root. Never `src/`.
 
 This persona answers: **does it work?** Build green, tests green, the diff actually implements the stated task, no regressions in adjacent behavior, edge cases handled, security boundaries intact. The "is it well-built?" question is the Architecture Verifier's job — don't confuse the two.
 
@@ -371,7 +373,7 @@ Then the issue list, then the 5-field handoff:
 
 Dispatch **after every implementer commit, in parallel with Functional Verifier and Black-User E2E Validator** (and Design Verifier when UI changed). Independent context — must not have been the worker.
 
-**Default model:** Sonnet. **Output location:** any artifacts (grep dumps, dep graphs) → `/tmp/<project>-*` or `.dev/scratchpad/`. Never repo root. Never `src/`.
+**Model:** efficient tier by default; escalate to the frontier tier when subtle structural risk is in play — a cross-file N+1, or a refactor that could silently change behavior (see Model policy in `SKILL.md`). **Output location:** any artifacts (grep dumps, dep graphs) → `/tmp/<project>-*` or `.dev/scratchpad/`. Never repo root. Never `src/`.
 
 This persona answers: **is it well-built?** DRY, simplicity, deepening opportunities, perf (N+1, repeated work), dead code, premature abstraction, terminology consistency, code organization. The "does it work?" question is the Functional Verifier's job — don't re-run builds/tests here.
 
@@ -429,7 +431,7 @@ Then the issue list, then the 5-field handoff:
 
 Dispatch **after every implementer commit, in parallel with Functional Verifier and Architecture Verifier** (and Design Verifier when UI changed). Skip ONLY when the change is trivial AND has no UI / flow impact (e.g. a 1-3 line backend constant, a comment, a string rename in code-only paths).
 
-**Default model:** Sonnet. **Output location:** screenshots → `.playwright-mcp/usertest-<purpose>-<date>/`. Never repo root. Never `src/` or `docs/`.
+**Model:** efficient tier or inherit. **Output location:** screenshots → `.playwright-mcp/usertest-<purpose>-<date>/`. Never repo root. Never `src/` or `docs/`.
 
 The "black user" framing is the whole point: you have **no prior knowledge** of the diff, the codebase, the architecture, the worker's intent. You know only what a real user of the product knows — the user-facing task ("add a deal", "see this month's settlement"). If something is confusing or broken in that frame, it's a real bug even if the code is correct.
 
@@ -476,7 +478,7 @@ Return the 5-field handoff with severity-tagged issues:
 
 Senior designer persona. Dispatch **after every implementer commit that produced visual output, in parallel with Functional Verifier, Architecture Verifier, and Black-User E2E Validator**. Especially mandatory when the user has named a tier (Stripe / Linear / Apple / Carnegie Hall / etc.).
 
-**Default model:** Sonnet. **Output location:** screenshots → `.playwright-mcp/verifier-<purpose>-<date>/`. DOM-eval dumps → `/tmp/` or `.dev/scratchpad/`. Never repo root. Never `src/` or `docs/`.
+**Model:** efficient tier by default; escalate to the frontier tier when the bar is a named 1-tier reference (Stripe / Linear / Apple) and the call is close (see Model policy in `SKILL.md`). **Output location:** screenshots → `.playwright-mcp/verifier-<purpose>-<date>/`. DOM-eval dumps → `/tmp/` or `.dev/scratchpad/`. Never repo root. Never `src/` or `docs/`.
 
 ```
 You are the Design Verifier. Independent context. Read-only. You are a senior designer who has worked on Stripe Dashboard / Linear / Apple Music for Artists / Carnegie Hall digital — adapt the reference to whatever the user invoked.

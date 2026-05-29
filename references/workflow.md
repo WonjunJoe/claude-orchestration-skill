@@ -103,7 +103,7 @@ Suggest the split in the worker's prompt — don't leave it to the worker to fig
 
 ### Which verifiers for which changes
 
-**Default: dispatch Functional + Architecture + Black-User E2E in parallel** for every implementer commit. Add **Design Verifier** in parallel when the commit touched UI. Sonnet × 3-4 is cheap compared to a single orchestrator miss that the user catches in dogfood and forces a full round-back.
+**Default: dispatch Functional + Architecture + Black-User E2E in parallel** for every implementer commit. Add **Design Verifier** in parallel when the commit touched UI. Three to four fresh-context verifiers are cheap compared to a single orchestrator miss that the user catches in dogfood and forces a full round-back. (Tier them per the [Model policy](../SKILL.md#model-policy): efficient by default, frontier when money / security / 1-tier quality is on the line.)
 
 **The non-negotiable pair: Functional + Architecture.** Every commit gets both, no exceptions. These two answer the two distinct questions every change must pass — *does it work?* and *is it well-built?* — and one verifier in one context can't reliably do both at adversarial depth.
 
@@ -125,7 +125,7 @@ Suggest the split in the worker's prompt — don't leave it to the worker to fig
 | Documentation / comments only | — | — | — | — |
 | **iOS SwiftUI change (any)** | **✓ XCUITest mandatory** | **✓** | **✓ simctl gesture** | **✓ if visual** |
 
-When in doubt, dispatch all three (or four with Design). Sonnet cost is far below "user catches it in dogfood and round 4 starts over."
+When in doubt, dispatch all three (or four with Design). The verifier cost is far below "user catches it in dogfood and round 4 starts over."
 
 ### Reading verifier reports
 

@@ -84,6 +84,10 @@ A single linear pass works fine for "fix this typo." This skill fires when:
 - The work needs **adversarial eyes** the orchestrator can't provide for itself (testing its own design, reviewing its own code).
 - The user explicitly wants **autonomous progress** without micro-confirmation at each step.
 
+## Model policy
+
+Personas don't pin a model name — they pick a **tier by risk**. A dispatched agent inherits the session model by default (almost always right); you override only with a stated reason. Read-only mapping (Audit / Research) and routine work run on the efficient tier; verifiers escalate to the frontier tier when a commit carries money math, a security boundary, or a named 1-tier quality bar. Expressing model choice as *tier + reason* instead of a version name keeps the skill from silently aging every time the model line moves (4.6 → 4.8 → …). Full rationale in [`SKILL.md`](SKILL.md#model-policy).
+
 ## Install
 
 Drop the skill into your local Claude Code skill directory:
@@ -100,7 +104,7 @@ Claude Code auto-loads skills from `~/.claude/skills/` on session start. Verify 
 ```
 SKILL.md                              # Skill entry point (loaded by Claude Code on trigger)
 references/
-├── personas.md                       # Full prompt templates for all 6 agent personas
+├── personas.md                       # Full prompt templates for all 9 agent personas
 ├── workflow.md                       # Phase-by-phase mechanics + decision trees
 ├── scrutiny-rules.md                 # Rule catalog read by Functional + Architecture Verifiers
 ├── ios-testing-conventions.md        # iOS-specific: accessibilityIdentifier + XCUITest
