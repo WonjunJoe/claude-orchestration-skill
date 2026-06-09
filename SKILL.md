@@ -102,7 +102,7 @@ Verifier returns one of four verdicts:
 
 ## Personas
 
-This skill carries nine reusable agent personas. Load the full persona prompt from `references/personas.md` when dispatching — that file is the source of truth for the system prompts.
+This skill carries nine reusable agent personas, each in its own file under `references/personas/`. When dispatching, point the worker at its own persona file — the worker reads `references/personas/<persona>.md` + `references/personas/_universal.md` and follows them. Don't load all the persona prose into the orchestrator's context; the prose belongs with the worker that uses it. `references/personas.md` is the index (which persona, which file).
 
 | Persona | Role | Mandatory tool | Tools | When to dispatch |
 |---|---|---|---|---|
@@ -118,7 +118,7 @@ This skill carries nine reusable agent personas. Load the full persona prompt fr
 
 Model choice is deliberately **not** a column here — pin it by tier and risk, not by version name. See [Model policy](#model-policy) below.
 
-See `references/personas.md` for full prompt templates. See `references/workflow.md` for detailed phase-by-phase mechanics and decision trees.
+See `references/personas/` for per-persona prompt templates (index + grouping notes in `references/personas.md`). See `references/workflow.md` for detailed phase-by-phase mechanics and decision trees.
 
 ## Model policy
 
