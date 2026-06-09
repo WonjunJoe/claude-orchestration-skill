@@ -231,6 +231,7 @@ After applying all relevant sections, return:
 
 - **PASS** — no violations found
 - **PASS_WITH_CONCERNS** — only MID/LOW violations, list as backlog
+- **PASS_WITH_UNVERIFIED** — a declared pass-check couldn't be verified from what's visible, but no blocking (HIGH+) evidence was found. Flag the gap; don't block on absence-of-confirmation alone
 - **NEEDS_REVISION** — HIGH violations or 3+ MID — fix loop required
 - **FAIL** — CRITICAL violation → **BLOCK** ship, fix mandatory
 
@@ -243,7 +244,7 @@ For each issue:
 Include this header in the report so the orchestrator can parse:
 
 ```
-SCRUTINY VERDICT: <PASS / PASS_WITH_CONCERNS / NEEDS_REVISION / FAIL>
+SCRUTINY VERDICT: <PASS / PASS_WITH_CONCERNS / PASS_WITH_UNVERIFIED / NEEDS_REVISION / FAIL>
 STACK DETECTED: <General + Next.js + ORM + ...>
 ISSUES: <count by severity, e.g., "CRITICAL: 0, HIGH: 1, MID: 2, LOW: 4">
 ```

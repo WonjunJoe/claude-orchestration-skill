@@ -11,6 +11,7 @@ Include these in every dispatch prompt regardless of persona:
 - **Output artifacts go to designated directories, never the repo root.** Screenshots → `.playwright-mcp/<purpose>-<date>/`. HTML mockups → `tmp/designs/<version>/`. Scratch scripts → `.dev/scratchpad/`. Build logs → `/tmp/<project>-*`. The orchestrator includes the exact path in the dispatch prompt. If you'd otherwise save a file at the working directory root, save under one of the above instead.
 - **Model: inherit by default; choose by tier + risk, never by version name.** Full rationale in the Model policy section of `SKILL.md`. In short: read-only roles and routine work run on the efficient tier (or just inherit the session model); verifiers escalate to the frontier tier when the commit carries money math, a security boundary, or a named 1-tier quality bar. Fresh context + an adversarial prompt is what catches most issues — but raw capability is what catches the subtle ones, so don't starve a high-stakes verifier to save tokens. When you override, state the reason (`model: frontier — settlement accuracy`).
 - **5-field handoff is non-negotiable.** Even when reporting a single-sentence outcome, structure it.
+- **Verifiers: declare pass criteria before judging, and flag-don't-block on unverifiable ones.** Before reviewing, write the concrete, checkable conditions this change must meet to PASS, then verify each. If a declared check can't be verified from what you can see, don't silently PASS it — and don't reflexively block on it either. Mark it `PASS_WITH_UNVERIFIED`, name the gap, and escalate to NEEDS_REVISION/FAIL only on blocking (HIGH+) evidence, not on the mere absence of confirmation. (A hard "unverified → block" rule over-blocks clean changes; flag-don't-block is the calibrated middle.)
 
 ---
 
@@ -339,7 +340,7 @@ Procedure:
 5. Edge cases — null/empty/0/single/max-size at least one of each. Error paths: would a test fail if the fix is mentally inverted ("fail-first" reasoning)?
 6. Security: does the change weaken any boundary (auth, data isolation, RLS, role checks)?
 7. Read the diff for regressions in adjacent code the worker didn't notice.
-8. Score: PASS / PASS_WITH_CONCERNS / NEEDS_REVISION / FAIL using the verdict format in `scrutiny-rules.md`.
+8. Score: PASS / PASS_WITH_CONCERNS / PASS_WITH_UNVERIFIED / NEEDS_REVISION / FAIL using the verdict format in `scrutiny-rules.md`.
 
 iOS XCUITest (required when project is iOS / mobile):
 Run XCUITest before declaring PASS. Build trace + grep alone misses actual user-gesture failures.
@@ -354,7 +355,7 @@ Constraints:
 
 Return the verdict header first:
 ```
-FUNCTIONAL VERDICT: <PASS / PASS_WITH_CONCERNS / NEEDS_REVISION / FAIL>
+FUNCTIONAL VERDICT: <PASS / PASS_WITH_CONCERNS / PASS_WITH_UNVERIFIED / NEEDS_REVISION / FAIL>
 STACK DETECTED: <General + Next.js + ORM + ...>
 ISSUES: <count by severity>
 ```
@@ -401,7 +402,7 @@ Procedure:
 6. For each new DB query / loop: is this an N+1? Is there repeated work that should be batched / cached?
 7. Look at what was deleted vs what was added: did the worker leave dead orphans? Did they bolt on a new path next to an existing one instead of consolidating?
 8. Terminology: every new user-facing label vs the glossary. Every domain enum name vs existing.
-9. Score: PASS / PASS_WITH_CONCERNS / NEEDS_REVISION / FAIL using the verdict format in `scrutiny-rules.md`.
+9. Score: PASS / PASS_WITH_CONCERNS / PASS_WITH_UNVERIFIED / NEEDS_REVISION / FAIL using the verdict format in `scrutiny-rules.md`.
 
 Constraints:
 - Don't re-run builds/tests. That's Functional Verifier. Just review the code.
@@ -412,7 +413,7 @@ Constraints:
 
 Return the verdict header first:
 ```
-ARCHITECTURE VERDICT: <PASS / PASS_WITH_CONCERNS / NEEDS_REVISION / FAIL>
+ARCHITECTURE VERDICT: <PASS / PASS_WITH_CONCERNS / PASS_WITH_UNVERIFIED / NEEDS_REVISION / FAIL>
 STACK DETECTED: <General + Next.js + ORM + ...>
 ISSUES: <count by severity>
 ```
@@ -501,7 +502,7 @@ Procedure:
    - **Shadow / depth** — subtle (Stripe-level), not bouncy
    - **Icons / illustration** — purposeful, not decorative
 
-5. Verdict: PASS / PASS_WITH_CONCERNS / NEEDS_REVISION / FAIL.
+5. Verdict: PASS / PASS_WITH_CONCERNS / PASS_WITH_UNVERIFIED / NEEDS_REVISION / FAIL.
    - PASS means a senior designer at the reference firm would not flag this in review.
    - NEEDS_REVISION means real issues, with concrete fix proposals.
 

@@ -85,15 +85,18 @@ So the default parallel batch is **3 verifiers** (Functional + Architecture + Bl
 
 **Model: inherit by default, escalate by risk — see [Model policy](#model-policy).** Fresh context + an adversarial prompt is what catches *most* issues, so a cost-efficient verifier with clean eyes is the right default. But raw capability is what catches the *subtle* miss — a hidden cross-file N+1, a total that's off by VAT, a boundary that leaks on one code path only — so escalate verifiers to the frontier tier when the commit carries money math, a security boundary, or a named 1-tier quality bar.
 
-**Main session does zero direct verification.** Don't read one screenshot and call it a critique; don't run a quick grep and call it scrutiny. Dispatch a fresh verifier instead. The whole point of the loop is that the orchestrator does not become a fifth opinion on its own work — it would carry the same blind spots.
+**Main session does zero *product* verification — but mandatory *meta*-verification.** Don't be the fifth opinion on whether the code is good or the design is 1-tier: dispatch a fresh verifier, because you carry the same blind spots as the worker. **But you are the ship-decider, so the *process evidence* is yours to check, not to take on faith.** Independently confirm `git status` is clean, that the commands a worker or verifier claims to have run actually exited 0, that named artifacts exist, and that the handoff's claims — "tests pass", "0 skipped", "only X touched", "surgical" — match the actual tree. A handoff that reports "12 passed, 0 skipped" over a skipped test, or "surgical" with a stray file committed, gets caught here. Never take the handoff's word over the evidence.
 
 ### Phase 4 — Loop
 
-Verifier returns one of three verdicts:
+Verifier returns one of four verdicts:
 
 - **PASS** — ship. Report to user.
 - **PASS_WITH_CONCERNS** — ship the main change. Concerns become follow-up tickets (backlog).
+- **PASS_WITH_UNVERIFIED** — ship, but a declared pass-check couldn't be verified; record the gap in the user-facing report. Non-blocking unless a HIGH+ finding backs it.
 - **NEEDS_REVISION** — dispatch a fix worker with the verifier's critique handed in verbatim. Then re-verify.
+
+**Aggregating disagreeing verifiers (the orchestrator's rule).** The parallel verifiers won't always agree, and you must not improvise the tie-break. Apply one rule: any **CRITICAL** → FAIL; any **HIGH** from any verifier → NEEDS_REVISION (FAIL if a CRITICAL is also present); **3+ MID** across all verifiers combined → NEEDS_REVISION; otherwise PASS / PASS_WITH_CONCERNS / PASS_WITH_UNVERIFIED (all non-blocking). If two verifiers assert contradictory *facts* (one calls a query an N+1, another calls it batched), dispatch a single tie-breaker verifier rather than guessing.
 
 **Round cap: 5.** If verification still fails after 5 rounds, the issue isn't implementation — the reference / direction is wrong. Stop and surface this to the user: "we've tried 5 rounds, the gap suggests we're aiming at the wrong target."
 

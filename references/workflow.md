@@ -11,7 +11,7 @@ When a task lands, the orchestrator's first move is to size it. Not to start cod
 3. **What does the user expect?** — Speed or quality? They'll usually tell you in tone: "ㄱㄱ" / "rough draft is fine" → speed; "1티어" / "prod-ready" / "verify 도" → quality. Quality means more verification rounds.
 4. **Can it be split?** — Big tasks should become 3-5 commits, not one mega-commit. Decide the split before dispatching anything.
 
-After this, sketch a one-paragraph plan — what audits, what implementer commits, what verifiers. You don't need to write it down formally; just hold it in head before dispatching.
+After this, write a one-paragraph plan to a **ledger file** — `.dev/orchestration/<task>.md` — and keep it current through the run. It holds: the original request, your assumptions, the non-goals, the acceptance criteria, the risk tier, the planned validators, a round counter, and a commit→verdict table. **Don't keep the plan only in your head.** A long orchestration session will compact, and the in-head plan — original scope, non-goals, round counts, backlog — is exactly what evaporates when it does. The file survives; your context may not. Update it at each phase.
 
 ## Phase 1 — Audit
 
@@ -129,12 +129,15 @@ When in doubt, dispatch all three (or four with Design). The verifier cost is fa
 
 ### Reading verifier reports
 
-The verifier's verdict is one of four:
+The verifier's verdict is one of five:
 
 - **PASS** — ship it. Mark the milestone done in the orchestrator's plan, move to next.
 - **PASS_WITH_CONCERNS** — the main change is fine; the concerns are real but they're not blockers. Add them to a backlog file or mention them in the user-facing report. Don't loop on them in this cycle.
+- **PASS_WITH_UNVERIFIED** — ships like PASS_WITH_CONCERNS, but specifically flags a declared check the verifier couldn't confirm from what it could see. Record the gap; don't block on it absent HIGH+ evidence.
 - **NEEDS_REVISION** — concrete issues, must be addressed before ship. Spawn a fix worker with the verifier's critique pasted in verbatim.
 - **FAIL** — fundamental problem (wrong direction, broken approach, missing assumption). Don't just dispatch another fix worker. Stop and rethink. Often surface this to the user.
+
+When several verifiers run in parallel and disagree, don't improvise the tie-break — apply the central aggregation rule in [SKILL.md → Phase 4](../SKILL.md#phase-4--loop) (CRITICAL → FAIL; any HIGH → NEEDS_REVISION; 3+ MID → NEEDS_REVISION; contradictory facts → one tie-breaker verifier).
 
 ### Fix-worker handoff
 
