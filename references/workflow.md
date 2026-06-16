@@ -99,6 +99,16 @@ If a worker would produce 200+ lines of diff or touch 5+ files, split into 2-4 c
 
 Suggest the split in the worker's prompt — don't leave it to the worker to figure out commit shape.
 
+### Branch & rollback strategy
+
+Workers commit real history, so the loop needs a way to throw away work that doesn't pass. Decide this **before** Phase 2, not after a FAIL.
+
+- **Branch first.** Cut a named orchestration branch off the base — `orch/<task>` — and run the whole loop there. Workers never commit straight onto the user's `main` or working branch. The branch is what makes failed work disposable.
+- **NEEDS_REVISION** — the approach is still accepted; the fix worker **appends** commits on the same branch. Don't rewrite history mid-loop.
+- **FAIL** — the approach is wrong. Either `git revert <range>` the rejected commits (when later work already sits on top of them) or **abandon the branch** entirely (when the whole direction was wrong). Never leave rejected code in the history you'll merge.
+- **PASS** — integrate per project policy: squash the fix-loop noise into the logical commits and merge (or open a PR), or fast-forward if the project keeps every commit. Read CLAUDE.md for the project's merge / squash / push convention.
+- **The ledger tracks each SHA's state.** Every commit is one of: `accepted` (passed, will merge), `superseded` (replaced by a later fix commit), `reverted` (undone via revert), `abandoned` (on a dropped branch). When the loop ends, only `accepted` SHAs should remain in the merge target. This is exactly what a clean `git status` does **not** tell you — the tree can be spotless while the history still carries reverted/abandoned code.
+
 ## Phase 3 — Verify
 
 ### Which verifiers for which changes
@@ -170,9 +180,10 @@ Default is to not interrupt. Interrupt only when interrupting saves the user tim
 When the loop terminates with PASS:
 
 1. **Verify the working tree is clean.** No uncommitted scratch files. Run `git status`.
-2. **Push if the project's policy says push.** Read CLAUDE.md or memory files for the project's push policy — many projects auto-push to test branches but require explicit approval for main.
-3. **Deploy if BE changes need it.** Match the project's deploy command (e.g., `fly deploy --config fly.test.toml`).
-4. **Report to the user.** Concise summary — what changed, what verifier rounds happened, what's on the backlog, what's the next decision point. HTML report for anything beyond a few commits.
+2. **Integrate the orchestration branch.** Confirm the ledger shows only `accepted` SHAs (no `reverted` / `superseded` / `abandoned` code lingering in what you're about to merge), then merge per project policy — squash the fix-loop noise into the logical commits, or fast-forward if the project keeps every commit. A clean tree is necessary but not sufficient: it sees the working tree, not whether failed code is still in the history.
+3. **Push if the project's policy says push.** Read CLAUDE.md or memory files for the project's push policy — many projects auto-push to test branches but require explicit approval for main.
+4. **Deploy if BE changes need it.** Match the project's deploy command (e.g., `fly deploy --config fly.test.toml`).
+5. **Report to the user.** Concise summary — what changed, what verifier rounds happened, what's on the backlog, what's the next decision point. HTML report for anything beyond a few commits.
 
 The report is the user's main artifact. Treat it as important as the code.
 

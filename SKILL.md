@@ -56,6 +56,8 @@ Audit and Research can run **in parallel** — different sources, different tool
 
 **Serial.** One worker at a time. Next worker inherits the previous commit via git. This avoids merge conflicts and keeps the architecture coherent.
 
+**Branch first.** Before the first implementer, cut a named orchestration branch (`orch/<task>`) off the base; workers commit there, never straight onto the user's `main` or working branch. This makes the whole loop disposable — a FAIL or a wrong direction becomes a branch you abandon, not history you have to surgically unpick. The ledger records each commit's state (`accepted` / `superseded` / `reverted` / `abandoned`); only `accepted` SHAs reach the merge target. Full mechanics in `workflow.md` → *Branch & rollback strategy*.
+
 The exception: workers in **completely separate file regions** (e.g., a frontend page and a backend endpoint that don't share files) can run in parallel — but only when you've verified there's no overlap. When in doubt, serial.
 
 Each worker:
@@ -102,6 +104,7 @@ Verifier returns one of four verdicts:
 - **PASS_WITH_CONCERNS** — ship the main change. Concerns become follow-up tickets (backlog).
 - **PASS_WITH_UNVERIFIED** — ship, but a declared pass-check couldn't be verified; record the gap in the user-facing report. Non-blocking unless a HIGH+ finding backs it.
 - **NEEDS_REVISION** — dispatch a fix worker with the verifier's critique handed in verbatim. Then re-verify.
+- **FAIL** — wrong direction, broken approach, or a missing assumption. Don't just dispatch another fix worker: `git revert` the rejected commit(s) (when later work sits on top) or abandon the orchestration branch (when the whole direction was wrong), then stop and rethink — usually surface to the user. Never carry rejected code into the merge target.
 
 **Aggregating disagreeing verifiers (the orchestrator's rule).** The parallel verifiers won't always agree, and you must not improvise the tie-break. Apply one rule: any **CRITICAL** → FAIL; any **HIGH** from any verifier → NEEDS_REVISION (FAIL if a CRITICAL is also present); **3+ MID** across all verifiers combined → NEEDS_REVISION; otherwise PASS / PASS_WITH_CONCERNS / PASS_WITH_UNVERIFIED (all non-blocking). If two verifiers assert contradictory *facts* (one calls a query an N+1, another calls it batched), dispatch a single tie-breaker verifier rather than guessing.
 
