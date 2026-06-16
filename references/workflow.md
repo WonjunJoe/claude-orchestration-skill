@@ -117,7 +117,7 @@ Workers commit real history, so the loop needs a way to throw away work that doe
 
 **Functional + Architecture are the floor for Medium and up.** They answer the two distinct questions every non-trivial change must pass — *does it work?* and *is it well-built?* — and one verifier in one context can't reliably do both at adversarial depth. Only Low-risk commits drop to a single functional check; never run zero.
 
-**Black-User E2E enters at High risk or any user-visible change.** Skip it for Low/Medium-risk changes with no UI or flow impact (a backend constant, a comment, an internal rename). The moment a change touches anything a user can see or interact with, e2e is in scope.
+**Black-User E2E enters at High risk or any user-visible change.** Skip it for Low/Medium-risk changes with no UI or flow impact (a backend constant, a comment, an internal rename). The moment a change touches anything a user can see or interact with, e2e is in scope — **but only dispatch it when its readiness contract is satisfiable** (running app, seed/reset, role credentials, allowed mutations, ground-truth access, cleanup; see persona `08`). If the environment can't be brought up, record the user-flow axis as a gap (PASS_WITH_UNVERIFIED) and fall back to targeted functional/security checks rather than faking a pass.
 
 **Design Verifier is conditional**: dispatched only when the commit produced visible UI output (component change, page redesign, new screen, style change). Skip on pure backend / refactor / config commits.
 
