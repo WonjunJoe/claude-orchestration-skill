@@ -106,9 +106,14 @@ Verifier returns one of four verdicts:
 - **NEEDS_REVISION** — dispatch a fix worker with the verifier's critique handed in verbatim. Then re-verify.
 - **FAIL** — wrong direction, broken approach, or a missing assumption. Don't just dispatch another fix worker: `git revert` the rejected commit(s) (when later work sits on top) or abandon the orchestration branch (when the whole direction was wrong), then stop and rethink — usually surface to the user. Never carry rejected code into the merge target.
 
-**Aggregating disagreeing verifiers (the orchestrator's rule).** The parallel verifiers won't always agree, and you must not improvise the tie-break. Apply one rule: any **CRITICAL** → FAIL; any **HIGH** from any verifier → NEEDS_REVISION (FAIL if a CRITICAL is also present); **3+ MID** across all verifiers combined → NEEDS_REVISION; otherwise PASS / PASS_WITH_CONCERNS / PASS_WITH_UNVERIFIED (all non-blocking). If two verifiers assert contradictory *facts* (one calls a query an N+1, another calls it batched), dispatch a single tie-breaker verifier rather than guessing.
+**Aggregating verifiers — gate on evidence, not just severity (the orchestrator's rule).** Don't improvise the tie-break — but don't treat every HIGH as ground truth either. A verifier can be wrong, over-severe, stale, blocked by a missing environment, or making a subjective call no other verifier can contradict. So weigh **severity × evidence**:
 
-**Round cap: 5.** If verification still fails after 5 rounds, the issue isn't implementation — the reference / direction is wrong. Stop and surface this to the user: "we've tried 5 rounds, the gap suggests we're aiming at the wrong target."
+- A finding **blocks** (CRITICAL → FAIL; HIGH → NEEDS_REVISION; FAIL if a CRITICAL is also present) only when it carries **reproducible evidence** — a failing command, a concrete file:line, or a named pass-criterion it violates. A bare assertion is not enough at HIGH+.
+- A **HIGH/CRITICAL without that evidence does not block on its own**: route it to one **challenge (tie-breaker) verifier**, or record it as PASS_WITH_UNVERIFIED. Promote it to blocking only if the challenge verifier reproduces it.
+- **3+ MID with evidence**, across all verifiers combined → NEEDS_REVISION; otherwise PASS / PASS_WITH_CONCERNS / PASS_WITH_UNVERIFIED (all non-blocking).
+- Dispatch a single **challenge verifier** when verifiers assert contradictory *facts* (one calls a query an N+1, another calls it batched), **or** when a blocking finding is disputed, unsupported, environment-blocked, or a subjective design call. **Challenge/tie-breaker rounds don't count against the 5-round cap** — they resolve verifier disputes, not implementation defects.
+
+**Round cap: 5.** If verification still fails after 5 rounds, the issue isn't implementation — the reference / direction is wrong. Stop and surface this to the user: "we've tried 5 rounds, the gap suggests we're aiming at the wrong target." (Only implementation fix rounds count toward the cap; challenge/tie-breaker rounds that resolve verifier disputes don't.)
 
 ## Personas
 

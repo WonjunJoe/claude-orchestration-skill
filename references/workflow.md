@@ -147,7 +147,7 @@ The verifier's verdict is one of five:
 - **NEEDS_REVISION** — concrete issues, must be addressed before ship. Spawn a fix worker with the verifier's critique pasted in verbatim.
 - **FAIL** — fundamental problem (wrong direction, broken approach, missing assumption). Don't just dispatch another fix worker. Stop and rethink. Often surface this to the user.
 
-When several verifiers run in parallel and disagree, don't improvise the tie-break — apply the central aggregation rule in [SKILL.md → Phase 4](../SKILL.md#phase-4--loop) (CRITICAL → FAIL; any HIGH → NEEDS_REVISION; 3+ MID → NEEDS_REVISION; contradictory facts → one tie-breaker verifier).
+When several verifiers run in parallel and disagree, don't improvise the tie-break — apply the central aggregation rule in [SKILL.md → Phase 4](../SKILL.md#phase-4--loop): gate on **severity × evidence**. A HIGH/CRITICAL blocks only with reproducible proof (failing command, file:line, violated pass-criterion); an unsupported or disputed HIGH+, contradictory facts, or an environment-blocked finding route to one **challenge (tie-breaker) verifier** instead of an automatic block — and that challenge round doesn't count against the 5-round cap.
 
 ### Fix-worker handoff
 
