@@ -67,7 +67,7 @@ Each worker:
 
 **Independent context.** Each verifier has never seen the code. This is the whole point.
 
-**Default = 3 verifiers in parallel** for every implementer commit:
+**Verifier intensity scales with the commit's risk tier — not a flat default.** The risk tier is set during sizing (`workflow.md`) and recorded in the ledger *before* dispatch; matching verification to risk is what separates a loop people actually run from one too expensive to use. The verifier types, and when each runs:
 
 1. **Functional Verifier** — *does it work?* Runs `npx tsc --noEmit` / `npm run build` / `pytest` / linters. Re-traces the diff against the original task. Checks edge cases, error paths, security boundaries. Reads the `[General] Functional correctness` + `[General] Surgical scope` + `[General] Layout shift` + stack-specific functional rules in `scrutiny-rules.md`.
 2. **Architecture Verifier** — *is it well-built?* Critiques HOW the change is implemented: DRY, simplicity, deepening, N+1 / perf, dead code, premature abstraction, terminology consistency. Reads the `[General] Simplicity` + `[General] DRY violations` + `[General] Terminology consistency` + stack-specific architecture rules (`[ORM] N+1 absolute prohibition`, etc.) in `scrutiny-rules.md`.
@@ -77,9 +77,16 @@ Each worker:
 
 4. **Design Verifier** — *is it 1-tier quality?* Senior designer persona, plays back screens, critiques typography / color / spacing / hierarchy against named reference tiers (Stripe / Linear / Apple). **Dispatch only when the commit touched UI.**
 
-So the default parallel batch is **3 verifiers** (Functional + Architecture + Black-User E2E), or **4 verifiers** when UI changed (+ Design).
+**Budget by risk tier** — pick the row matching the commit's tier and record it in the ledger before dispatching:
 
-**Skip rule (skip e2e only):** when the change is tiny + obvious + has no UI / flow impact (e.g. a 1-3 line backend constant tweak, a string rename, a comment), drop Black-User E2E and run just **Functional + Architecture**. Never skip below 2. Functional + Architecture are non-negotiable on every commit.
+| Risk tier | What it is | Verifier budget |
+|---|---|---|
+| **Low** | cosmetic / a 1–3 line const / comment / isolated rename — no money, no security, no UI or flow change | orchestrator local checks (typecheck / build if cheap) + **1 Functional Verifier**. Architecture optional. |
+| **Medium** | ordinary feature or refactor logic — no money math, no security boundary | **Functional + Architecture** (the classic pair). |
+| **High** | money math, a security / permission boundary, data isolation, or a named 1-tier UI bar | Functional + Architecture **+ Black-User E2E and/or Design and/or a security-focused pass** — verifiers escalated to the frontier tier. |
+| **Critical** | settlement correctness, auth / permission, destructive ops | everything in High **+ a frontier tie-breaker or a human gate** before ship. |
+
+**Functional + Architecture are the floor for Medium and up** — they answer the two questions every non-trivial change must pass (*does it work?* / *is it well-built?*), and one verifier in one context can't do both at adversarial depth. Only **Low**-risk commits drop to a single functional check; never run zero verifiers. When unsure which tier, **round up** — one extra verifier costs far less than a missed money/security bug, but a flat 3–4 on every trivial commit is the over-verification that makes the loop too slow to actually use.
 
 **iOS / mobile stack: Functional Verifier 는 XCUITest 실행 의무.** Code trace 만으론 false positive 잦음 (예: `testBackPreservesSession` 가 PASS 단 실제 사용자는 lost — assertion 약함). XCUITest 가 진짜 end-user gesture verify. `xcodebuild test -only-testing:<UITestTarget>` 통과가 PASS 의 1st signal.
 
@@ -111,10 +118,10 @@ This skill carries nine reusable agent personas, each in its own file under `ref
 | **Feature Implementer** | Build NEW behavior → one commit | — | Read, Edit, Write, Bash | Phase 2, when the assignment adds new behavior |
 | **Refactor Implementer** | Restructure WITHOUT changing behavior (DRY / consolidation / deepening) | Full existing test suite still green | Read, Edit, Write, Bash | Phase 2, when the assignment is structural-only |
 | **Fix Implementer** | Fix a broken behavior using TDD (failing test first, then green) | Reproducer test that fails before, passes after, fails again when fix inverted | Read, Edit, Write, Bash | Phase 2, when the assignment is a bug / regression / wrong calculation |
-| **Functional Verifier** | *Does it work?* — builds, tests, scope, correctness, security | `xcodebuild test -only-testing:<UITestTarget>` (iOS) | Read, Bash | Phase 3 — **always, default parallel** |
-| **Architecture Verifier** | *Is it well-built?* — DRY, simplicity, perf (N+1), deepening, dead code | — | Read, Grep, Bash | Phase 3 — **always, default parallel** |
-| **Black-User E2E Validator** | *Does a clueless user succeed?* — drives running app as fresh user | Playwright (web) / XCUITest (iOS) | playwright MCP, Bash | Phase 3 — **default parallel** (skip only if change is trivial + no UI/flow impact) |
-| **Design Verifier** | *Is it 1-tier quality?* — typography / color / spacing critique | — | playwright MCP, Read | Phase 3 — **default parallel when UI touched** |
+| **Functional Verifier** | *Does it work?* — builds, tests, scope, correctness, security | `xcodebuild test -only-testing:<UITestTarget>` (iOS) | Read, Bash | Phase 3 — **floor: runs at every tier** |
+| **Architecture Verifier** | *Is it well-built?* — DRY, simplicity, perf (N+1), deepening, dead code | — | Read, Grep, Bash | Phase 3 — **Medium+ (floor pair w/ Functional)** |
+| **Black-User E2E Validator** | *Does a clueless user succeed?* — drives running app as fresh user | Playwright (web) / XCUITest (iOS) | playwright MCP, Bash | Phase 3 — **High risk / any user-visible change** |
+| **Design Verifier** | *Is it 1-tier quality?* — typography / color / spacing critique | — | playwright MCP, Read | Phase 3 — **when UI touched (High+)** |
 
 Model choice is deliberately **not** a column here — pin it by tier and risk, not by version name. See [Model policy](#model-policy) below.
 

@@ -103,13 +103,13 @@ Suggest the split in the worker's prompt — don't leave it to the worker to fig
 
 ### Which verifiers for which changes
 
-**Default: dispatch Functional + Architecture + Black-User E2E in parallel** for every implementer commit. Add **Design Verifier** in parallel when the commit touched UI. Three to four fresh-context verifiers are cheap compared to a single orchestrator miss that the user catches in dogfood and forces a full round-back. (Tier them per the [Model policy](../SKILL.md#model-policy): efficient by default, frontier when money / security / 1-tier quality is on the line.)
+**Verifier count scales with the commit's risk tier** (set during sizing, recorded in the ledger) — see the budget table in [SKILL.md → Phase 3](../SKILL.md#phase-3--verify). In short: **Low** = orchestrator local checks + one Functional Verifier; **Medium** = Functional + Architecture; **High** = add Black-User E2E and/or Design and/or a security pass (frontier tier); **Critical** = add a tie-breaker or human gate. Don't run a flat 3–4 verifiers on every commit — that over-verification is what makes the loop too slow to actually use. (Tier the model per the [Model policy](../SKILL.md#model-policy): efficient by default, frontier when money / security / 1-tier quality is on the line.)
 
-**The non-negotiable pair: Functional + Architecture.** Every commit gets both, no exceptions. These two answer the two distinct questions every change must pass — *does it work?* and *is it well-built?* — and one verifier in one context can't reliably do both at adversarial depth.
+**Functional + Architecture are the floor for Medium and up.** They answer the two distinct questions every non-trivial change must pass — *does it work?* and *is it well-built?* — and one verifier in one context can't reliably do both at adversarial depth. Only Low-risk commits drop to a single functional check; never run zero.
 
-**Black-User E2E is the default third, skip rule is narrow:** drop e2e only when the change is **trivial AND has zero UI / flow impact** — a 1-3 line backend constant tweak, a comment, an internal helper rename that's not user-facing. The moment a change touches anything a user can see or interact with, e2e runs.
+**Black-User E2E enters at High risk or any user-visible change.** Skip it for Low/Medium-risk changes with no UI or flow impact (a backend constant, a comment, an internal rename). The moment a change touches anything a user can see or interact with, e2e is in scope.
 
-**Design Verifier is conditional**: dispatched in parallel with the other 3 only when the commit produced visible UI output (component change, page redesign, new screen, style change). Skip on pure backend / refactor / config commits.
+**Design Verifier is conditional**: dispatched only when the commit produced visible UI output (component change, page redesign, new screen, style change). Skip on pure backend / refactor / config commits.
 
 **iOS / mobile stack: Functional Verifier 의 XCUITest 결과 = primary signal. Code trace 는 보조.** `xcodebuild test` exit 0 + XCUITest assertions all green 이어야 PASS 선언 가능. Black-User E2E uses simctl gesture for the user-flow side.
 
@@ -121,11 +121,11 @@ Suggest the split in the worker's prompt — don't leave it to the worker to fig
 | Frontend functional change | ✓ | ✓ | ✓ | ✓ if any visual |
 | Frontend visual redesign | ✓ | ✓ | ✓ | ✓ |
 | End-to-end feature | ✓ | ✓ | ✓ | ✓ |
-| **Trivial — 1-3 line const / comment / rename, no UI** | ✓ | ✓ | — | — |
+| **Trivial / Low-risk — 1-3 line const / comment / rename, no UI** | ✓ | opt | — | — |
 | Documentation / comments only | — | — | — | — |
 | **iOS SwiftUI change (any)** | **✓ XCUITest mandatory** | **✓** | **✓ simctl gesture** | **✓ if visual** |
 
-When in doubt, dispatch all three (or four with Design). The verifier cost is far below "user catches it in dogfood and round 4 starts over."
+The table above is the **Medium-and-up** heuristic; Low-risk commits use the lighter budget (one Functional Verifier, Architecture optional). When unsure which tier, **round up** — one extra verifier costs far less than a missed money/security bug, but a flat 3–4 on every trivial commit is the over-verification that makes the loop too slow to use.
 
 ### Reading verifier reports
 
