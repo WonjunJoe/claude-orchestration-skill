@@ -22,7 +22,7 @@ Each agent gets a **fresh context** and a **narrow remit**. The worker implement
 
 ## Personas
 
-Nine reusable agent personas, each with a full prompt template in [`references/personas.md`](references/personas.md):
+Nine reusable agent personas, each with a full prompt template under [`references/personas/`](references/personas/) — numbered `01_`–`09_` by workflow order, with `_universal.md` holding the shared rules. [`references/personas.md`](references/personas.md) is the index (which persona, which file):
 
 | Persona | Role | When to dispatch |
 |---|---|---|
@@ -99,12 +99,33 @@ git clone https://github.com/WonjunJoe/claude-orchestration-skill.git \
 
 Claude Code auto-loads skills from `~/.claude/skills/` on session start. Verify by checking the available-skills list in any new session — `orchestration` should appear with the trigger phrases.
 
+### Local development — two locations, one source
+
+If you develop the skill in a separate git checkout (instead of editing inside `~/.claude/skills/`), the skill effectively lives in **two locations that must never drift**:
+
+- the **git repo** you edit and commit in — e.g. `~/code/claude-orchestration-skill`
+- the **live skill folder** Claude Code actually loads — `~/.claude/skills/orchestration`
+
+Keep them as **one source via a symlink** so there is no copy step and drift is impossible:
+
+```bash
+# one-time: point the live skill folder at your repo
+rm -rf ~/.claude/skills/orchestration
+ln -s /absolute/path/to/claude-orchestration-skill ~/.claude/skills/orchestration
+```
+
+After this, editing the repo updates the live skill instantly — the folder Claude loads *is* the repo. (`README.md` / `LICENSE` simply ride along in the skill folder; Claude Code only reads `SKILL.md` + `references/`.)
+
 ## Files
 
 ```
 SKILL.md                              # Skill entry point (loaded by Claude Code on trigger)
 references/
-├── personas.md                       # Full prompt templates for all 9 agent personas
+├── personas.md                       # Index of the 9 personas (which persona, which file)
+├── personas/                         # One prompt template per persona, numbered by workflow order
+│   ├── _universal.md                 #   shared rules, loaded alongside every persona
+│   ├── 01_domain-audit-worker.md     #   … through …
+│   └── 09_design-verifier.md         #   (01–09: audit/research → implementers → verifiers)
 ├── workflow.md                       # Phase-by-phase mechanics + decision trees
 ├── scrutiny-rules.md                 # Rule catalog read by Functional + Architecture Verifiers
 ├── ios-testing-conventions.md        # iOS-specific: accessibilityIdentifier + XCUITest
