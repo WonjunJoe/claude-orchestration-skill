@@ -2,6 +2,7 @@
 
 Include these in every dispatch prompt regardless of persona:
 
+- **Path references use `<SKILL_ROOT>`** — the absolute path to this skill's root (e.g. `~/.claude/skills/orchestration`). The orchestrator substitutes the real path when it writes the dispatch prompt; if you ever see a literal `<SKILL_ROOT>`, ask the orchestrator for the absolute skill path.
 - **Output artifacts go to designated directories, never the repo root.** Screenshots → `.playwright-mcp/<purpose>-<date>/`. HTML mockups → `tmp/designs/<version>/`. Scratch scripts → `.dev/scratchpad/`. Build logs → `/tmp/<project>-*`. The orchestrator includes the exact path in the dispatch prompt. If you'd otherwise save a file at the working directory root, save under one of the above instead.
 - **Model: inherit by default; choose by tier + risk, never by version name.** Full rationale in the Model policy section of `SKILL.md`. In short: read-only roles and routine work run on the efficient tier (or just inherit the session model); verifiers escalate to the frontier tier when the commit carries money math, a security boundary, or a named 1-tier quality bar. Fresh context + an adversarial prompt is what catches most issues — but raw capability is what catches the subtle ones, so don't starve a high-stakes verifier to save tokens. When you override, state the reason (`model: frontier — settlement accuracy`).
 - **5-field handoff is non-negotiable.** Even when reporting a single-sentence outcome, structure it.

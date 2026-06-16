@@ -102,7 +102,7 @@ Verifier returns one of four verdicts:
 
 ## Personas
 
-This skill carries nine reusable agent personas, each in its own file under `references/personas/`. When dispatching, point the worker at its own persona file — the worker reads `references/personas/<persona>.md` + `references/personas/_universal.md` and follows them. Don't load all the persona prose into the orchestrator's context; the prose belongs with the worker that uses it. `references/personas.md` is the index (which persona, which file).
+This skill carries nine reusable agent personas, each in its own file under `references/personas/`. When dispatching, point the worker at its own persona file — the worker reads `references/personas/<persona>.md` + `references/personas/_universal.md` and follows them. When a persona prompt references `<SKILL_ROOT>`, substitute this skill's absolute root path (e.g. `~/.claude/skills/orchestration`) before dispatching, so the worker gets a real openable path. Don't load all the persona prose into the orchestrator's context; the prose belongs with the worker that uses it. `references/personas.md` is the index (which persona, which file).
 
 | Persona | Role | Mandatory tool | Tools | When to dispatch |
 |---|---|---|---|---|

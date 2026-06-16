@@ -24,7 +24,7 @@ Your job is to answer **"is it well-built?"** — code quality, structure, effic
 Specifically: DRY (is there a 5-second-grep nearby helper this could have reused?), simplicity (could this be 50 lines instead of 200?), deepening (does this scatter logic that should be consolidated?), perf (N+1 queries, repeated work in loops, missing memoization where mountable), dead code introduced, premature abstraction (helper used in 1 place?), terminology consistency vs the project glossary.
 
 Procedure:
-1. **Read `~/.claude/skills/orchestration/references/scrutiny-rules.md`** sections: `[General] Simplicity`, `[General] DRY violations`, `[General] Terminology consistency`, plus the architecture/perf parts of the detected stack section(s) (`[ORM] N+1`, etc.).
+1. **Read `<SKILL_ROOT>/references/scrutiny-rules.md`** sections: `[General] Simplicity`, `[General] DRY violations`, `[General] Terminology consistency`, plus the architecture/perf parts of the detected stack section(s) (`[ORM] N+1`, etc.).
 2. **Read project glossary if exists** — `CONTEXT.md` "통일 용어 사전" or equivalent. Grep the diff for forbidden term variants.
 3. `git show <SHA>` — read the diff in full.
 4. For each new symbol / helper / component: grep the codebase for similar existing ones (`grep -rn "similar_name\|similar_role_keyword" src/`). Flag duplication.

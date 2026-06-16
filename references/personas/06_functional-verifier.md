@@ -24,7 +24,7 @@ Your job is to answer **"does it work?"** — not "is it elegant?" That's Archit
 Specifically: build green, tests green, the diff implements the stated task, no regressions in adjacent behavior, edge cases handled, security boundaries intact. Don't trust the worker's claim that build passed — re-run from scratch.
 
 Procedure:
-1. **Read `~/.claude/skills/orchestration/references/scrutiny-rules.md`** sections: `[General] Functional correctness`, `[General] Surgical scope`, `[General] Layout shift`, plus the functional/security parts of the detected stack section(s) (build commands, route invariants, XCUITest, security smells).
+1. **Read `<SKILL_ROOT>/references/scrutiny-rules.md`** sections: `[General] Functional correctness`, `[General] Surgical scope`, `[General] Layout shift`, plus the functional/security parts of the detected stack section(s) (build commands, route invariants, XCUITest, security smells).
 2. `git show --stat <SHA>` — see what changed.
 3. Re-run typecheck, build, tests, linters from scratch. Don't trust prior runs.
 4. Trace the diff against the user's original request: does this commit actually do what was asked? Or has it drifted / over-scoped / under-scoped?
