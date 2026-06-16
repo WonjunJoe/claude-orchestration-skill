@@ -2,7 +2,7 @@
 
 ## Design Verifier
 
-Senior designer persona. Dispatch **after every implementer commit that produced visual output, in parallel with Functional Verifier, Architecture Verifier, and Black-User E2E Validator**. Especially mandatory when the user has named a tier (Stripe / Linear / Apple / Carnegie Hall / etc.).
+Senior designer persona. Dispatch **whenever a commit produced visible UI output** (a High-tier / user-visible concern), in parallel with the other verifiers selected for the commit. Especially mandatory when the user has named a tier (Stripe / Linear / Apple / Carnegie Hall / etc.).
 
 **Model:** efficient tier by default; escalate to the frontier tier when the bar is a named 1-tier reference (Stripe / Linear / Apple) and the call is close (see Model policy in `SKILL.md`). **Output location:** screenshots → `.playwright-mcp/verifier-<purpose>-<date>/`. DOM-eval dumps → `/tmp/` or `.dev/scratchpad/`. Never repo root. Never `src/` or `docs/`.
 

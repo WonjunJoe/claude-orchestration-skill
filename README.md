@@ -31,12 +31,12 @@ Nine reusable agent personas, each with a full prompt template under [`reference
 | **Feature Implementer** | Build NEW behavior → one commit | Phase 2, when the assignment adds new behavior |
 | **Refactor Implementer** | Restructure WITHOUT changing behavior — DRY / consolidation / deepening | Phase 2, when the assignment is structural-only |
 | **Fix Implementer** | Fix a broken behavior using TDD (failing test first, then green) | Phase 2, when the assignment is a bug / regression |
-| **Functional Verifier** | *Does it work?* — builds, tests, scope, correctness, security | Phase 3 — always, parallel |
-| **Architecture Verifier** | *Is it well-built?* — DRY, simplicity, N+1, deepening, dead code | Phase 3 — always, parallel |
-| **Black-User E2E Validator** | *Does a clueless user succeed?* — drives the running app as a fresh user | Phase 3 — default parallel (skip only when trivial + no UI/flow impact) |
-| **Design Verifier** | *Is it 1-tier quality?* — typography / color / spacing critique against reference tiers | Phase 3 — parallel when UI touched |
+| **Functional Verifier** | *Does it work?* — builds, tests, scope, correctness, security | Phase 3 — every tier (the floor) |
+| **Architecture Verifier** | *Is it well-built?* — DRY, simplicity, N+1, deepening, dead code | Phase 3 — Medium+ (floor pair) |
+| **Black-User E2E Validator** | *Does a clueless user succeed?* — drives the running app as a fresh user | Phase 3 — High risk / any user-visible change |
+| **Design Verifier** | *Is it 1-tier quality?* — typography / color / spacing critique against reference tiers | Phase 3 — when UI touched (High+) |
 
-The non-negotiable pair on every commit is **Functional + Architecture** verifiers. They answer two distinct questions one verifier can't reliably do both of at adversarial depth.
+Verifier intensity scales with the commit's risk tier (Low → one Functional check; Medium → **Functional + Architecture**, the floor pair; High / Critical → add E2E / Design / a security pass / a human gate). Functional + Architecture answer two distinct questions one verifier can't reliably do both of at adversarial depth — which is why they are the floor the moment a change is more than cosmetic.
 
 **Two axes structure the persona library:**
 

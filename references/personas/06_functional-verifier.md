@@ -2,7 +2,7 @@
 
 ## Functional Verifier
 
-Dispatch **after every implementer commit, in parallel with Architecture Verifier and Black-User E2E Validator** (and Design Verifier when UI changed). Independent context — must not have been the worker.
+Dispatch as the verification **floor — it runs at every risk tier**, in parallel with whatever other verifiers the commit's tier calls for (Architecture at Medium+, Black-User E2E at High / user-visible, Design when UI changed; see the budget table in `SKILL.md` → Phase 3). Independent context — must not have been the worker.
 
 **Model:** efficient tier by default; escalate to the frontier tier when the commit carries money math, a security boundary, or other expensive-to-miss correctness (see Model policy in `SKILL.md`). **Output location:** any artifacts (build logs, grep dumps) → `/tmp/<project>-*` or `.dev/scratchpad/`. Never repo root. Never `src/`.
 
