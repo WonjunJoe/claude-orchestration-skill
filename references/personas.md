@@ -6,15 +6,15 @@ Every persona ends with **the 5-field handoff format**. That's intentional — t
 
 | Persona | File | Role |
 |---|---|---|
-| Domain Audit Worker | `personas/domain-audit-worker.md` | Map the codebase before changes (read-only) |
-| Research Worker | `personas/research-worker.md` | Investigate external knowledge — docs, specs, prior art |
-| Feature Implementer | `personas/feature-implementer.md` | Build NEW behavior → one commit |
-| Refactor Implementer | `personas/refactor-implementer.md` | Restructure WITHOUT changing behavior |
-| Fix Implementer | `personas/fix-implementer.md` | Fix a broken behavior (TDD) |
-| Functional Verifier | `personas/functional-verifier.md` | *Does it work?* |
-| Architecture Verifier | `personas/architecture-verifier.md` | *Is it well-built?* |
-| Black-User E2E Validator | `personas/black-user-e2e-validator.md` | *Does a clueless user succeed?* |
-| Design Verifier | `personas/design-verifier.md` | *Is it 1-tier quality?* |
+| Domain Audit Worker | `personas/01_domain-audit-worker.md` | Map the codebase before changes (read-only) |
+| Research Worker | `personas/02_research-worker.md` | Investigate external knowledge — docs, specs, prior art |
+| Feature Implementer | `personas/03_feature-implementer.md` | Build NEW behavior → one commit |
+| Refactor Implementer | `personas/04_refactor-implementer.md` | Restructure WITHOUT changing behavior |
+| Fix Implementer | `personas/05_fix-implementer.md` | Fix a broken behavior (TDD) |
+| Functional Verifier | `personas/06_functional-verifier.md` | *Does it work?* |
+| Architecture Verifier | `personas/07_architecture-verifier.md` | *Is it well-built?* |
+| Black-User E2E Validator | `personas/08_black-user-e2e-validator.md` | *Does a clueless user succeed?* |
+| Design Verifier | `personas/09_design-verifier.md` | *Is it 1-tier quality?* |
 | _(shared)_ | `personas/_universal.md` | Rules every dispatch applies — load alongside any persona |
 
 When you dispatch, fill in the task-specific details (file paths, the exact change, the exact verification criteria) in the worker's prompt. Reuse the persona's identity and procedural rules verbatim — the consistency is what makes the loop work across many invocations.
